@@ -5,8 +5,6 @@ from dotenv import load_dotenv
 
 class PostgresSQL:
     def __init__(self):
-        # self.type = type
-        # self.prompt = SQLPrompt
         load_dotenv()
         self.db_user = os.getenv("DB_USER")
         self.db_port = os.getenv("DB_PORT")
