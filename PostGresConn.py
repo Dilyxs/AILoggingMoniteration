@@ -1,4 +1,5 @@
 import psycopg
+from psycopg import sql
 import os
 from dotenv import load_dotenv
 
