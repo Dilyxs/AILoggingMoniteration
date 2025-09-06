@@ -30,19 +30,32 @@ class PostgresSQL:
             all_data = cur.fetchall()
         return [dict(zip(columns, row)) for row in all_data]
 
-    def FetchSpecificData(self, table, condition="", columns="*"):
-        """
-        Fetch specific data from a table.
-        :param table: Table name
-        :param condition: Optional SQL condition, e.g. "WHERE id < 5"
-        :param columns: Columns to select, default "*"
-        """
-        conn = self.conn()
-        with conn.cursor() as cur:
-            cur.execute(f"SELECT {columns} FROM {table} {condition}")
-            col_names = [desc[0] for desc in cur.description]
-            all_data = cur.fetchall()
-        return [dict(zip(col_names, row)) for row in all_data]
+    def FetchSpecificData(self, table, condition=None, params=None, columns=None, limit=None):
+        try:
+            with self.conn().cursor() as cur:
+                cols = (
+                    sql.SQL(', ').join(sql.Identifier(c) for c in columns)
+                    if columns else sql.SQL('*')
+                )
+
+                query = sql.SQL("SELECT {fields} FROM {table}").format(
+                    fields=cols,
+                    table=sql.Identifier(table)
+                )
+                if condition:
+                    query += sql.SQL(" WHERE ") + sql.SQL(condition)
+                if limit:
+                    query += sql.SQL(" LIMIT %s")
+                    params = (params or []) + [limit]
+                cur.execute(query, params)
+                col_names = [desc.name for desc in cur.description]
+                all_data = cur.fetchall()
+
+            return [dict(zip(col_names, row)) for row in all_data]
+
+        except Exception as e:
+            print(f"[ERROR] Failed to fetch data: {e}")
+            return []
 
     def InsertData(self, table, data: dict):
         """
