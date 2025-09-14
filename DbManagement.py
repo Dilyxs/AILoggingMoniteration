@@ -1,4 +1,4 @@
-from datetime import dateime,timezone
+from datetime import datetime,timezone
 
 class CustomLoggerManagement:
 	def __init__(self, db):

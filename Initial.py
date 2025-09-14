@@ -75,11 +75,14 @@ class Test:
 		for data in self.data:
 			AIsolution = None
 			if data['ErrorPresent']:
-				filepath = data['filepath']
-				txt_filepath = self.api.convert_log_to_txt(data['loggerpath'])
-				data = self.api.file_to_text(txt_filepath)
-				response = self.api.SendMessage(data, filepath=filepath)
-				AIsolution = response
+                try:
+                    filepath = data['filepath']
+                    txt_filepath = self.api.convert_log_to_txt(data['loggerpath'])
+                    res = self.api.file_to_text(txt_filepath)
+                    response = self.api.SendMessage(res, filepath=filepath)
+                    AIsolution = response
+                except Exeception:
+                    AIsolution = f"gemini could not resolve manual inspection requred"
 			data['AIsolution'] = AIsolution
 
 	def UpdateDB(self):
