@@ -1,16 +1,22 @@
 from PostGresConn import  PostgresSQL
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 from huggingface_hub import whoami
+from GemmaAPI import GemmaAPI
+from DbManagement import  CustomLoggerManagement
 
 class Test:
     def __init__(self):
         self.db = PostgresSQL()
+		self.api = GemmaAPI()
+		self.DbManager = CustomLoggerManagement(self.db)
         self.Loggers = []
         self.data = self.FetchLoggers();#this return a list with each row of db as a Map;
         self.AddLastLoggedLines()
         self.AddLinesToView()
         self.model = self.ReturnModel()
         self.DetectIfErrorLarge()
+		self.AiOpinion()
+		self.UpdateDB()
 
 
     def ReturnModel(self,model_name ="byviz/bylastic_classification_logs"):
@@ -66,6 +72,22 @@ class Test:
     def DetectIfErrorLarge(self):
         for data in self.data:
             data['ErrorPresent'] = self.DetectIfError(data['loggerpath'], self.model, data['lastloggedline'], None)
+
+	def AiOpinion(self):
+		for data in self.data:
+			AIsolution = None
+			if data['ErrorPresent']:
+				filepath = data['filepath']
+				txt_filepath = API.convert_log_to_txt(data['loggerpath'])
+				data = API.file_to_text(txt_filepath)
+				response  = API.SendMessage(data, filepath=filepath)
+				AIsolution = response
+			data['AIsolution'] = AIsolution
+	def UpdateDB(self):
+		for data in self.data:
+			self.DbManager.UpdateLoggerLine(data['lastloggedline'], data['id'])
+			self.DbManager.AddData(data['lastloggedline'], data['ErrorPresent'], data['AIsolution'])
+			
 
 a = Test()
 for i in a.data:
